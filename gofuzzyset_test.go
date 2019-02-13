@@ -63,6 +63,10 @@ func TestIterateGrams(t *testing.T) {
 
 	grams := iterateGrams(a, gramSize)
 
+	if len(grams) != 19 {
+		t.Fatalf("nah...len=%v", len(grams))
+	}
+
 	for i := range grams {
 		t.Logf(grams[i])
 	}
@@ -74,6 +78,9 @@ func TestGramCounter(t *testing.T) {
 
 	gramsByCount := gramCounter(a, gramSize)
 
+	if gramsByCount["te"] != 2 {
+		t.Fatalf("te is wrong %v", gramsByCount["te"])
+	}
 	for k, v := range gramsByCount {
 		t.Logf("%v = %v", k, v)
 	}
@@ -85,6 +92,10 @@ func TestIterateGramsEdgeCases(t *testing.T) {
 
 	grams := iterateGrams(a, gramSize)
 
+	if len(grams) != 1 {
+		t.Fatalf("awkward...%v", len(grams))
+	}
+
 	for i := range grams {
 		t.Logf(grams[i])
 	}
@@ -93,10 +104,22 @@ func TestIterateGramsEdgeCases(t *testing.T) {
 func TestNew(t *testing.T) {
 	data := []string{"Hello", "Hell", "hEllo"}
 	lowerGramSize := 3
-	upperGramSize := 3
+	upperGramSize := 5
 	minScore := 0.33
 
 	f := New(data, true, lowerGramSize, upperGramSize, minScore)
+
+	if len(f.exactSet) != 2 {
+		t.Fatalf("expected 2 got %v", len(f.exactSet))
+	}
+
+	if len(f.itemsByGramSize) != 3 {
+		t.Fatalf("expected 3 got %v", len(f.itemsByGramSize))
+	}
+
+	if len(f.matchDict) != 15 {
+		t.Fatalf("expected 15 got %v", len(f.matchDict))
+	}
 
 	t.Logf("exactSet %v", f.exactSet)
 	t.Logf("itemsByGramSize %v", f.itemsByGramSize)
@@ -147,6 +170,10 @@ func TestFindMatchesForGramSize(t *testing.T) {
 	f := New(data, true, lowerGramSize, upperGramSize, 0.33)
 
 	results := f.findMatchesForGramSize("holl", 3)
+
+	if len(results) != 2 {
+		t.Fatalf("nope expected 2 got %v", len(results))
+	}
 
 	t.Logf("Results = %v", results)
 }
@@ -212,6 +239,14 @@ func TestFull(t *testing.T) {
 	f := New(data, true, lowerGramSize, upperGramSize, minScore)
 
 	results := f.Get("mossisippi")
+
+	if len(results) != 2 {
+		t.Fatalf("num results not right expect 2 got %v", len(results))
+	}
+
+	if results[0].Word != "mississippi" || results[0].Score != 0.8181818181818181 {
+		t.Fatalf("first match not right...%v", results[0])
+	}
 
 	t.Logf("Results = %v", results)
 
