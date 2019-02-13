@@ -1,7 +1,6 @@
 package gofuzzyset
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"regexp"
@@ -38,7 +37,7 @@ type Match struct {
 	Score float64
 }
 
-func New(ctx context.Context, data []string, useLevenshtein bool, gramSizeLower int, gramSizeUpper int, minScore float64) *fuzzy {
+func New(data []string, useLevenshtein bool, gramSizeLower int, gramSizeUpper int, minScore float64) *fuzzy {
 	f := fuzzy {
 		useLevenshtein: useLevenshtein,
 		gramSizeLower: gramSizeLower,
@@ -57,13 +56,13 @@ func New(ctx context.Context, data []string, useLevenshtein bool, gramSizeLower 
 
 	// Add data to fuzzy set
 	for i := range data {
-		f.Add(ctx, data[i])
+		f.Add(data[i])
 	}
 
 	return &f
 }
 
-func (f fuzzy) Add(ctx context.Context, value string) {
+func (f fuzzy) Add(value string) {
 	normalizedValue := normalizeStr(value)
 
 	// If this normaized value is in the exact set already, then ignore
@@ -75,7 +74,7 @@ func (f fuzzy) Add(ctx context.Context, value string) {
 		items := f.itemsByGramSize[gramSize]
 		index := len(items)
 
-		gramsByCount := gramCounter(ctx, value, gramSize)
+		gramsByCount := gramCounter(value, gramSize)
 		sumOfSquareGramCounts := 0.0
 
 		for gram, gramCount := range gramsByCount {
@@ -98,7 +97,7 @@ func (f fuzzy) Add(ctx context.Context, value string) {
 /*
 	Search for a value with a score of at least minScore...return the found value along w/ the score
  */
-func (f fuzzy) Get(ctx context.Context, value string) []Match {
+func (f fuzzy) Get(value string) []Match {
 	results := make([]Match, 0)
 
 	// Check for exact match
@@ -109,7 +108,7 @@ func (f fuzzy) Get(ctx context.Context, value string) []Match {
 
 	// start with high gram size and if there are no results, go to lower gram sizes
 	for gramSize := f.gramSizeUpper;gramSize >= f.gramSizeLower;gramSize-- {
-		results = f.findMatchesForGramSize(ctx, value, gramSize)
+		results = f.findMatchesForGramSize(value, gramSize)
 
 		if len(results) > 0 {
 			break
@@ -119,13 +118,13 @@ func (f fuzzy) Get(ctx context.Context, value string) []Match {
 	return results
 }
 
-func (f fuzzy) findMatchesForGramSize(ctx context.Context, value string, gramSize int) []Match {
+func (f fuzzy) findMatchesForGramSize(value string, gramSize int) []Match {
 	var results []Match
 	matches := make(map[int]int, 0)
 
 	normalizedValue := normalizeStr(value)
 
-	gramCountsByGram := gramCounter(ctx, normalizedValue, gramSize)
+	gramCountsByGram := gramCounter(normalizedValue, gramSize)
 	sumOfSquareGramCounts := 0.0
 
 	for gram, gramCount := range gramCountsByGram {
@@ -166,7 +165,7 @@ func (f fuzzy) findMatchesForGramSize(ctx context.Context, value string, gramSiz
 		newResults := make([]Match, 0)
 
 		for i := range results {
-			newResults = append(newResults, Match{Score: distance(ctx, results[i].Word, normalizedValue), Word: results[i].Word})
+			newResults = append(newResults, Match{Score: distance(results[i].Word, normalizedValue), Word: results[i].Word})
 		}
 
 		results = newResults
@@ -189,7 +188,7 @@ func normalizeStr(str string) string {
 	return strings.ToLower(str)
 }
 
-func levenshtein(ctx context.Context, str1, str2 string) int {
+func levenshtein(str1, str2 string) int {
 	s1len := len(str1)
 	s2len := len(str2)
 	column := make([]int, len(str1)+1)
@@ -217,7 +216,7 @@ func levenshtein(ctx context.Context, str1, str2 string) int {
 }
 
 // return an edit distance from 0 to 1
-func distance(ctx context.Context, str1, str2 string) float64 {
+func distance(str1, str2 string) float64 {
 	if str1 == "" {
 		return 0
 	}
@@ -226,7 +225,7 @@ func distance(ctx context.Context, str1, str2 string) float64 {
 		return 0
 	}
 
-	d := levenshtein(ctx, str1, str2);
+	d := levenshtein(str1, str2);
 
 	if len(str1) > len(str2) {
 		return 1.0 - float64(d)/float64(len(str1))
@@ -237,7 +236,7 @@ func distance(ctx context.Context, str1, str2 string) float64 {
 
 var nonWordRE = regexp.MustCompile("/[^a-zA-Z0-9\u00C0-\u00FF, ]+/g")
 
-func iterateGrams(ctx context.Context, value string, gramSize int) []string {
+func iterateGrams(value string, gramSize int) []string {
 	grams := make([]string, 0)
 
 	simplified := fmt.Sprintf("-%v-", nonWordRE.ReplaceAllString(strings.ToLower(value), ""))
@@ -256,9 +255,9 @@ func iterateGrams(ctx context.Context, value string, gramSize int) []string {
 }
 
 // Results = map with grams as key and number of occurances as values
-func gramCounter(ctx context.Context, value string, gramSize int) map[string]int {
+func gramCounter(value string, gramSize int) map[string]int {
 	results := make(map[string]int)
-	grams := iterateGrams(ctx, value, gramSize)
+	grams := iterateGrams(value, gramSize)
 
 	for i := range grams {
 		if _, found := results[grams[i]];found {

@@ -1,9 +1,8 @@
 package gofuzzyset
 
 import (
-"context"
-"sort"
-"testing"
+	"sort"
+	"testing"
 )
 
 func TestMin(t *testing.T) {
@@ -17,12 +16,11 @@ func TestMin(t *testing.T) {
 }
 
 func TestLevenshtein(t *testing.T) {
-	ctx := context.Background()
 	a := "hello"
 	b := "hello"
 
 	// distance should be zero I would think
-	if levenshtein(ctx, a, b) != 0 {
+	if levenshtein(a, b) != 0 {
 		t.Fatalf("nah")
 	}
 
@@ -30,41 +28,40 @@ func TestLevenshtein(t *testing.T) {
 	a = "kitten"
 	b = "sitting"
 
-	if levenshtein(ctx, a, b) != 3 {
-		t.Fatalf("uh oh....%v", levenshtein(ctx, a, b))
+	if levenshtein(a, b) != 3 {
+		t.Fatalf("uh oh....%v", levenshtein(a, b))
 	}
 
 	// "sit" and "sitting" is 4
 	a = "sit"
 	b = "sitting"
 
-	if levenshtein(ctx, a, b) != 4 {
-		t.Fatalf("uh oh....%v", levenshtein(ctx, a, b))
+	if levenshtein(a, b) != 4 {
+		t.Fatalf("uh oh....%v", levenshtein(a, b))
 	}
 
 	// "hello and "goodbye" is 7 (there is no overlap)
 	a = "hello"
 	b = "goodbye"
 
-	if levenshtein(ctx, a, b) != 7 {
-		t.Fatalf("uh oh....%v", levenshtein(ctx, a, b))
+	if levenshtein(a, b) != 7 {
+		t.Fatalf("uh oh....%v", levenshtein(a, b))
 	}
 
 	// "flaw" and "lawn" is 2 (delete the f and Add an n to the end)
 	a = "flaw"
 	b = "lawn"
 
-	if levenshtein(ctx, a, b) != 2 {
-		t.Fatalf("uh oh....%v", levenshtein(ctx, a, b))
+	if levenshtein(a, b) != 2 {
+		t.Fatalf("uh oh....%v", levenshtein(a, b))
 	}
 }
 
 func TestIterateGrams(t *testing.T) {
-	ctx := context.Background()
 	a := "test the gram thing"
 	gramSize := 3
 
-	grams := iterateGrams(ctx, a, gramSize)
+	grams := iterateGrams(a, gramSize)
 
 	for i := range grams {
 		t.Logf(grams[i])
@@ -72,11 +69,10 @@ func TestIterateGrams(t *testing.T) {
 }
 
 func TestGramCounter(t *testing.T) {
-	ctx := context.Background()
 	a := "test the gram thing test"
 	gramSize := 2
 
-	gramsByCount := gramCounter(ctx, a, gramSize)
+	gramsByCount := gramCounter(a, gramSize)
 
 	for k, v := range gramsByCount {
 		t.Logf("%v = %v", k, v)
@@ -84,11 +80,10 @@ func TestGramCounter(t *testing.T) {
 }
 
 func TestIterateGramsEdgeCases(t *testing.T) {
-	ctx := context.Background()
 	a := "testing"
 	gramSize := 15
 
-	grams := iterateGrams(ctx, a, gramSize)
+	grams := iterateGrams(a, gramSize)
 
 	for i := range grams {
 		t.Logf(grams[i])
@@ -96,13 +91,12 @@ func TestIterateGramsEdgeCases(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	ctx := context.Background()
 	data := []string{"Hello", "Hell", "hEllo"}
 	lowerGramSize := 3
 	upperGramSize := 3
 	minScore := 0.33
 
-	f := New(ctx, data, true, lowerGramSize, upperGramSize, minScore)
+	f := New(data, true, lowerGramSize, upperGramSize, minScore)
 
 	t.Logf("exactSet %v", f.exactSet)
 	t.Logf("itemsByGramSize %v", f.itemsByGramSize)
@@ -146,20 +140,18 @@ func TestSortByScore(t *testing.T) {
 }
 
 func TestFindMatchesForGramSize(t *testing.T) {
-	ctx := context.Background()
 	data := []string{"Hello", "Hell", "hEllo", "hollow"}
 	lowerGramSize := 3
 	upperGramSize := 3
 
-	f := New(ctx, data, true, lowerGramSize, upperGramSize, 0.33)
+	f := New(data, true, lowerGramSize, upperGramSize, 0.33)
 
-	results := f.findMatchesForGramSize(ctx, "holl", 3)
+	results := f.findMatchesForGramSize("holl", 3)
 
 	t.Logf("Results = %v", results)
 }
 
 func TestFull(t *testing.T) {
-	ctx := context.Background()
 	lowerGramSize := 2
 	upperGramSize := 3
 	minScore := 0.33
@@ -217,15 +209,15 @@ func TestFull(t *testing.T) {
 		"Wyoming",
 	}
 
-	f := New(ctx, data, true, lowerGramSize, upperGramSize, minScore)
+	f := New(data, true, lowerGramSize, upperGramSize, minScore)
 
-	results := f.Get(ctx, "mossisippi")
+	results := f.Get("mossisippi")
 
 	t.Logf("Results = %v", results)
 
 	f.useLevenshtein = false
 
-	results = f.Get(ctx, "mossisippi")
+	results = f.Get("mossisippi")
 
 	t.Logf("Results = %v", results)
 }
