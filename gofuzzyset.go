@@ -57,10 +57,42 @@ func New(ctx context.Context, data []string, useLevenshtein bool, gramSizeLower 
 
 	// Add data to fuzzy set
 	for i := range data {
-		f.add(ctx, data[i])
+		f.Add(ctx, data[i])
 	}
 
 	return &f
+}
+
+func (f fuzzy) Add(ctx context.Context, value string) {
+	normalizedValue := normalizeStr(value)
+
+	// If this normaized value is in the exact set already, then ignore
+	if _, found := f.exactSet[normalizedValue];found {
+		return
+	}
+
+	for gramSize := f.gramSizeLower; gramSize <= f.gramSizeUpper; gramSize++ {
+		items := f.itemsByGramSize[gramSize]
+		index := len(items)
+
+		gramsByCount := gramCounter(ctx, value, gramSize)
+		sumOfSquareGramCounts := 0.0
+
+		for gram, gramCount := range gramsByCount {
+			sumOfSquareGramCounts = sumOfSquareGramCounts + float64(gramCount * gramCount)
+
+			if _, found := f.matchDict[gram];found {
+				f.matchDict[gram] = append(f.matchDict[gram], []int{index, gramCount})
+			} else {
+				f.matchDict[gram] = [][]int{{index, gramCount}}
+			}
+		}
+
+		vectorNormal := math.Sqrt(sumOfSquareGramCounts)
+		items = append(items, item{normalizedValue: normalizedValue, vectorNormal: vectorNormal})
+		f.itemsByGramSize[gramSize] = items
+		f.exactSet[normalizedValue] = value
+	}
 }
 
 /*
@@ -151,38 +183,6 @@ func (f fuzzy) findMatchesForGramSize(ctx context.Context, value string, gramSiz
 	}
 
 	return newResults
-}
-
-func (f fuzzy) add(ctx context.Context, value string) {
-	normalizedValue := normalizeStr(value)
-
-	// If this normaized value is in the exact set already, then ignore
-	if _, found := f.exactSet[normalizedValue];found {
-		return
-	}
-
-	for gramSize := f.gramSizeLower; gramSize <= f.gramSizeUpper; gramSize++ {
-		items := f.itemsByGramSize[gramSize]
-		index := len(items)
-
-		gramsByCount := gramCounter(ctx, value, gramSize)
-		sumOfSquareGramCounts := 0.0
-
-		for gram, gramCount := range gramsByCount {
-			sumOfSquareGramCounts = sumOfSquareGramCounts + float64(gramCount * gramCount)
-
-			if _, found := f.matchDict[gram];found {
-				f.matchDict[gram] = append(f.matchDict[gram], []int{index, gramCount})
-			} else {
-				f.matchDict[gram] = [][]int{{index, gramCount}}
-			}
-		}
-
-		vectorNormal := math.Sqrt(sumOfSquareGramCounts)
-		items = append(items, item{normalizedValue: normalizedValue, vectorNormal: vectorNormal})
-		f.itemsByGramSize[gramSize] = items
-		f.exactSet[normalizedValue] = value
-	}
 }
 
 func normalizeStr(str string) string {

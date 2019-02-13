@@ -50,7 +50,7 @@ func TestLevenshtein(t *testing.T) {
 		t.Fatalf("uh oh....%v", levenshtein(ctx, a, b))
 	}
 
-	// "flaw" and "lawn" is 2 (delete the f and add an n to the end)
+	// "flaw" and "lawn" is 2 (delete the f and Add an n to the end)
 	a = "flaw"
 	b = "lawn"
 
@@ -100,8 +100,9 @@ func TestNew(t *testing.T) {
 	data := []string{"Hello", "Hell", "hEllo"}
 	lowerGramSize := 3
 	upperGramSize := 3
+	minScore := 0.33
 
-	f := New(ctx, data, true, lowerGramSize, upperGramSize, 0.33)
+	f := New(ctx, data, true, lowerGramSize, upperGramSize, minScore)
 
 	t.Logf("exactSet %v", f.exactSet)
 	t.Logf("itemsByGramSize %v", f.itemsByGramSize)
@@ -159,6 +160,9 @@ func TestFindMatchesForGramSize(t *testing.T) {
 
 func TestFull(t *testing.T) {
 	ctx := context.Background()
+	lowerGramSize := 2
+	upperGramSize := 3
+	minScore := 0.33
 
 	data := []string{
 		"Alabama",
@@ -213,7 +217,7 @@ func TestFull(t *testing.T) {
 		"Wyoming",
 	}
 
-	f := New(ctx, data, true, 2, 3, 0.33)
+	f := New(ctx, data, true, lowerGramSize, upperGramSize, minScore)
 
 	results := f.Get(ctx, "mossisippi")
 
