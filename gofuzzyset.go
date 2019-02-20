@@ -9,7 +9,7 @@ import (
 )
 
 // This is a re-implementation of the javascript fuzzyset thingy
-type fuzzy struct {
+type FuzzySet struct {
 	// key is gram size, value is "item"
 	itemsByGramSize map[int][]item
 
@@ -37,8 +37,8 @@ type Match struct {
 	Score float64
 }
 
-func New(data []string, useLevenshtein bool, gramSizeLower int, gramSizeUpper int, minScore float64) *fuzzy {
-	f := fuzzy {
+func New(data []string, useLevenshtein bool, gramSizeLower int, gramSizeUpper int, minScore float64) *FuzzySet {
+	f := FuzzySet{
 		useLevenshtein: useLevenshtein,
 		gramSizeLower: gramSizeLower,
 		gramSizeUpper: gramSizeUpper,
@@ -54,7 +54,7 @@ func New(data []string, useLevenshtein bool, gramSizeLower int, gramSizeUpper in
 		f.itemsByGramSize[gramSize] = make([]item, 0)
 	}
 
-	// Add data to fuzzy set
+	// Add data to FuzzySet set
 	for i := range data {
 		f.Add(data[i])
 	}
@@ -62,7 +62,7 @@ func New(data []string, useLevenshtein bool, gramSizeLower int, gramSizeUpper in
 	return &f
 }
 
-func (f fuzzy) Add(value string) {
+func (f FuzzySet) Add(value string) {
 	normalizedValue := normalizeStr(value)
 
 	// If this normaized value is in the exact set already, then ignore
@@ -97,7 +97,7 @@ func (f fuzzy) Add(value string) {
 /*
 	Search for a value with a score of at least minScore...return the found value along w/ the score
  */
-func (f fuzzy) Get(value string) []Match {
+func (f FuzzySet) Get(value string) []Match {
 	results := make([]Match, 0)
 
 	// Check for exact match
@@ -118,7 +118,7 @@ func (f fuzzy) Get(value string) []Match {
 	return results
 }
 
-func (f fuzzy) findMatchesForGramSize(value string, gramSize int) []Match {
+func (f FuzzySet) findMatchesForGramSize(value string, gramSize int) []Match {
 	var results []Match
 	matches := make(map[int]int, 0)
 
